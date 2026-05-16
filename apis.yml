@@ -1,18 +1,33 @@
 aid: peloton
-url: https://raw.githubusercontent.com/api-evangelist/peloton/refs/heads/main/apis.yml
 name: Peloton
-type: Index
+description: >-
+  A connected fitness company offering stationary bikes, treadmills, rowers, and
+  a digital platform for live and on-demand fitness classes. Peloton pioneered
+  the premium at-home fitness category, blending hardware, software, and
+  instructor-led content into an interactive workout experience available across
+  Peloton equipment and a standalone Peloton App on iOS, Android, web, and
+  connected TV. Peloton does not publish a public developer API, partner portal,
+  or third-party integration program; all API surfaces are internal and only
+  reachable through the consumer apps. Reverse-engineered community libraries
+  exist on GitHub but are unsupported by Peloton.
+kind: company
 image: https://kinlane-productions.s3.amazonaws.com/apis-json/apis-json-logo.jpg
 tags:
   - Fitness
   - Wellness
-  - Technology
   - Connected Fitness
-description: 'A connected fitness company offering stationary bikes, treadmills, and a digital platform for live and on-demand fitness classes. Pioneered the premium at-home fitness category blending hardware, software, and content into an interactive workout experience.'
+  - Subscription
+  - Hardware
+  - Streaming
+  - Consumer
+url: https://raw.githubusercontent.com/api-evangelist/peloton/refs/heads/main/apis.yml
 created: '2026-05-05'
-modified: '2026-05-05'
+modified: '2026-05-09'
 specificationVersion: '0.19'
 apis: []
 common:
   - type: Website
     url: https://www.onepeloton.com/
+maintainers:
+  - FN: Kin Lane
+    email: kin@apievangelist.com
