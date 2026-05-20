@@ -26,6 +26,8 @@ modified: '2026-05-09'
 specificationVersion: '0.19'
 apis: []
 common:
+  - type: LinkedIn
+    url: https://www.linkedin.com/company/peloton
   - type: Website
     url: https://www.onepeloton.com/
 maintainers:
