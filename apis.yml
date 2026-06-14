@@ -24,7 +24,26 @@ url: https://raw.githubusercontent.com/api-evangelist/peloton/refs/heads/main/ap
 created: '2026-05-05'
 modified: '2026-05-09'
 specificationVersion: '0.19'
-apis: []
+apis:
+  - name: Peloton API
+    description: >-
+      Conceptual GraphQL schema for the Peloton connected fitness platform,
+      derived from community reverse-engineering of the internal REST API.
+      Covers authentication, users, subscriptions, hardware devices,
+      instructors, classes, workouts, performance metrics, leaderboards,
+      social features, challenges, media assets, and notifications.
+    image: https://kinlane-productions.s3.amazonaws.com/apis-json/apis-json-logo.jpg
+    humanURL: https://www.onepeloton.com/
+    baseURL: https://api.onepeloton.com
+    tags:
+      - Fitness
+      - Wellness
+      - Connected Fitness
+      - Subscription
+      - Streaming
+    properties:
+      - url: graphql/peloton-graphql.md
+        type: GraphQL
 common:
   - type: LinkedIn
     url: https://www.linkedin.com/company/peloton

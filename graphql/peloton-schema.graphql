@@ -1,0 +1,836 @@
+"""
+Peloton GraphQL Schema
+Conceptual schema derived from community reverse-engineering of the Peloton
+internal REST API (api.onepeloton.com) and the pylotoncycle SDK.
+Not an official Peloton product.
+"""
+
+# ─── Scalars ────────────────────────────────────────────────────────────────
+
+scalar DateTime
+scalar URL
+scalar JSON
+
+# ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum SubscriptionTier {
+  FREE
+  APP
+  ALL_ACCESS
+  FAMILY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  EXPIRED
+  TRIAL
+}
+
+enum DeviceType {
+  BIKE
+  BIKE_PLUS
+  TREAD
+  TREAD_PLUS
+  ROW
+  GUIDE
+  APP
+}
+
+enum ClassDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum WorkoutStatus {
+  IN_PROGRESS
+  COMPLETE
+  SKIPPED
+}
+
+enum FollowStatus {
+  FOLLOWING
+  NOT_FOLLOWING
+  PENDING
+  BLOCKED
+}
+
+enum NotificationType {
+  WORKOUT_LIKE
+  FOLLOW_REQUEST
+  CHALLENGE_INVITE
+  ACHIEVEMENT
+  LIVE_CLASS_REMINDER
+  STREAK_MILESTONE
+  FRIEND_WORKOUT
+}
+
+# ─── Identity & Auth ─────────────────────────────────────────────────────────
+
+"""Session token returned after successful authentication."""
+type AuthToken {
+  token: String!
+  userId: ID!
+  expiresAt: DateTime!
+  sessionId: String!
+}
+
+"""Login from a Peloton hardware device."""
+type DeviceLogin {
+  deviceId: ID!
+  deviceType: DeviceType!
+  token: AuthToken!
+  linkedUserId: ID
+}
+
+"""Platform-specific OAuth token (e.g. Apple, Google)."""
+type PlatformToken {
+  platform: String!
+  accessToken: String!
+  refreshToken: String
+  expiresAt: DateTime
+}
+
+"""An active authenticated session."""
+type Session {
+  id: ID!
+  user: User!
+  createdAt: DateTime!
+  lastSeenAt: DateTime!
+  deviceType: DeviceType
+  ipAddress: String
+}
+
+# ─── Users & Profiles ────────────────────────────────────────────────────────
+
+"""Core Peloton account record."""
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  profile: UserProfile
+  subscription: Subscription
+  membership: Membership
+  appSubscription: AppSubscription
+  devices: [Device!]
+  followerStats: FollowerStats
+  streaks: [Streak!]
+  achievements: [Achievement!]
+  badges: [Badge!]
+  pbRecords: [PBRecord!]
+  workouts(limit: Int, offset: Int): [Workout!]
+  bookmarks: [Bookmark!]
+  tags: [Tag!]
+  createdAt: DateTime!
+  lastActiveAt: DateTime
+}
+
+"""Extended user profile information."""
+type UserProfile {
+  userId: ID!
+  displayName: String
+  firstName: String
+  lastName: String
+  avatarUrl: URL
+  location: String
+  bio: String
+  birthday: String
+  gender: String
+  weight: Float
+  height: Float
+  totalWorkouts: Int!
+  followingCount: Int!
+  followerCount: Int!
+  isPrivate: Boolean!
+}
+
+"""Aggregate follower and following counts for a user."""
+type FollowerStats {
+  userId: ID!
+  followerCount: Int!
+  followingCount: Int!
+  mutualCount: Int!
+}
+
+"""Follow relationship between two users."""
+type FollowSummary {
+  fromUserId: ID!
+  toUserId: ID!
+  status: FollowStatus!
+  createdAt: DateTime
+}
+
+"""A pending or accepted friend/follow request."""
+type FriendRequest {
+  id: ID!
+  fromUser: User!
+  toUser: User!
+  status: FollowStatus!
+  sentAt: DateTime!
+  respondedAt: DateTime
+}
+
+# ─── Subscriptions & Memberships ─────────────────────────────────────────────
+
+"""Digital or all-access membership record."""
+type Subscription {
+  id: ID!
+  userId: ID!
+  tier: SubscriptionTier!
+  status: SubscriptionStatus!
+  startedAt: DateTime!
+  expiresAt: DateTime
+  autoRenews: Boolean!
+  paymentMethod: String
+}
+
+"""Hardware-linked membership tier."""
+type Membership {
+  id: ID!
+  userId: ID!
+  device: Device!
+  tier: SubscriptionTier!
+  status: SubscriptionStatus!
+  activatedAt: DateTime!
+  expiresAt: DateTime
+}
+
+"""App-only subscription not tied to hardware."""
+type AppSubscription {
+  id: ID!
+  userId: ID!
+  platform: String!
+  status: SubscriptionStatus!
+  tier: SubscriptionTier!
+  startedAt: DateTime!
+  expiresAt: DateTime
+  trialEndsAt: DateTime
+}
+
+# ─── Hardware & Devices ───────────────────────────────────────────────────────
+
+"""A registered Peloton device."""
+type Device {
+  id: ID!
+  type: DeviceType!
+  serialNumber: String
+  firmware: String
+  name: String
+  linkedUserId: ID
+  registeredAt: DateTime
+}
+
+"""Peloton Bike or Bike+ device."""
+type Bike {
+  id: ID!
+  device: Device!
+  model: String!
+  isPlusTier: Boolean!
+  screenSize: Float
+  hasCamera: Boolean!
+  lastSyncedAt: DateTime
+}
+
+"""Peloton Tread or Tread+ device."""
+type Treadmill {
+  id: ID!
+  device: Device!
+  model: String!
+  isPlusTier: Boolean!
+  maxSpeed: Float
+  maxIncline: Float
+  lastSyncedAt: DateTime
+}
+
+"""Peloton Row device."""
+type Row {
+  id: ID!
+  device: Device!
+  model: String!
+  lastSyncedAt: DateTime
+}
+
+"""Peloton Guide camera-based strength training device."""
+type Guide {
+  id: ID!
+  device: Device!
+  model: String!
+  cameraEnabled: Boolean!
+  formFeedbackEnabled: Boolean!
+  lastSyncedAt: DateTime
+}
+
+# ─── Instructors ─────────────────────────────────────────────────────────────
+
+"""Peloton instructor record."""
+type Instructor {
+  id: ID!
+  name: String!
+  firstName: String!
+  lastName: String!
+  username: String!
+  imageUrl: URL
+  bio: InstructorBio
+  classTypes: [ClassType!]
+  totalClassCount: Int
+  isActive: Boolean!
+  hiredAt: DateTime
+}
+
+"""Extended instructor biography and background."""
+type InstructorBio {
+  instructorId: ID!
+  shortBio: String
+  longBio: String
+  quote: String
+  background: String
+  education: String
+  spotifyPlaylistUrl: URL
+  instagramUrl: URL
+  twitterUrl: URL
+  facebookUrl: URL
+}
+
+# ─── Classes ─────────────────────────────────────────────────────────────────
+
+"""Category of fitness class."""
+type ClassType {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  iconUrl: URL
+  subTypes: [ClassType!]
+  parentType: ClassType
+}
+
+"""Base class record with fields shared across all class types."""
+type Class {
+  id: ID!
+  title: String!
+  description: String
+  instructor: Instructor!
+  classType: ClassType!
+  duration: Int!
+  difficulty: ClassDifficulty
+  difficultyRating: Float
+  imageUrl: URL
+  tags: [Tag!]
+  genres: [Genre!]
+  playlist: MusicPlaylist
+  transcript: Transcript
+  captions: [Caption!]
+  totalRatings: Int
+  averageRating: Float
+  language: String
+  isExplicit: Boolean!
+  releasedAt: DateTime
+  mediaAssets: [MediaAsset!]
+}
+
+"""A scheduled real-time broadcast class."""
+type LiveClass {
+  id: ID!
+  baseClass: Class!
+  scheduledStartAt: DateTime!
+  scheduledEndAt: DateTime!
+  studio: String
+  totalExpectedParticipants: Int
+  totalRegisteredRiders: Int
+  isStreaming: Boolean!
+  streamUrl: URL
+  chatEnabled: Boolean!
+}
+
+"""A recorded class available for on-demand playback."""
+type OnDemandClass {
+  id: ID!
+  baseClass: Class!
+  videoUrl: URL
+  previewUrl: URL
+  closedCaptionsUrl: URL
+  totalCompletions: Int!
+  originalAirDate: DateTime
+  isNewRelease: Boolean!
+}
+
+"""A class a user has added to their personal calendar."""
+type ScheduledClass {
+  id: ID!
+  userId: ID!
+  class: Class!
+  scheduledFor: DateTime!
+  addedAt: DateTime!
+  reminderSent: Boolean!
+}
+
+"""A class saved to a user's personal list."""
+type Bookmark {
+  id: ID!
+  userId: ID!
+  class: Class!
+  savedAt: DateTime!
+}
+
+"""A multi-week structured fitness program."""
+type Program {
+  id: ID!
+  title: String!
+  description: String
+  instructor: Instructor!
+  tags: [ProgramTag!]
+  classTypes: [ClassType!]
+  totalWeeks: Int!
+  classesPerWeek: Int!
+  totalClasses: Int!
+  difficulty: ClassDifficulty
+  imageUrl: URL
+  classes: [Class!]
+  enrolledCount: Int
+  isActive: Boolean!
+  createdAt: DateTime!
+}
+
+"""Tag applied to a program."""
+type ProgramTag {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+# ─── Workouts & Performance ───────────────────────────────────────────────────
+
+"""A completed workout session."""
+type Workout {
+  id: ID!
+  userId: ID!
+  class: Class
+  device: Device
+  status: WorkoutStatus!
+  startedAt: DateTime!
+  endedAt: DateTime
+  duration: Int
+  summary: WorkoutSummary
+  metrics: WorkoutMetrics
+  leaderboardRank: Int
+  isPersonalRecord: Boolean!
+  kudosCount: Int!
+  createdAt: DateTime!
+}
+
+"""High-level statistics for a completed workout."""
+type WorkoutSummary {
+  workoutId: ID!
+  totalOutput: Float
+  avgOutput: Float
+  maxOutput: Float
+  totalCalories: Float
+  avgHeartRate: Float
+  maxHeartRate: Float
+  avgCadence: Float
+  maxCadence: Float
+  avgResistance: Float
+  maxResistance: Float
+  avgSpeed: Float
+  maxSpeed: Float
+  totalDistance: Float
+  avgPace: Float
+  strivescore: Float
+  personalRecord: Boolean!
+}
+
+"""Time-series performance data for a workout."""
+type WorkoutMetrics {
+  workoutId: ID!
+  sampleIntervalSeconds: Int!
+  heartRate: HeartRate
+  output: Output
+  cadence: Cadence
+  resistance: Resistance
+  pace: Pace
+  totalDurationSeconds: Int!
+}
+
+"""Heart rate samples during a workout."""
+type HeartRate {
+  averageValue: Float
+  maxValue: Float
+  values: [Float!]
+  zones: [HeartRateZone!]
+}
+
+"""Heart rate zone breakdown."""
+type HeartRateZone {
+  slug: String!
+  displayName: String!
+  minBpm: Int!
+  maxBpm: Int!
+  durationSeconds: Int!
+  percentage: Float!
+}
+
+"""Power output (watts) samples during a workout."""
+type Output {
+  averageValue: Float
+  maxValue: Float
+  totalValue: Float
+  values: [Float!]
+}
+
+"""Pedaling cadence (rpm) samples during a workout."""
+type Cadence {
+  averageValue: Float
+  maxValue: Float
+  values: [Float!]
+}
+
+"""Resistance level samples during a workout."""
+type Resistance {
+  averageValue: Float
+  maxValue: Float
+  values: [Float!]
+}
+
+"""Pace samples (mph or min/mile) during a workout."""
+type Pace {
+  averageValue: Float
+  maxValue: Float
+  values: [Float!]
+  unit: String!
+}
+
+# ─── Leaderboards & Achievements ─────────────────────────────────────────────
+
+"""Leaderboard for a specific class or challenge."""
+type Leaderboard {
+  classId: ID!
+  totalEntries: Int!
+  entries: [LeaderboardEntry!]!
+  userEntry: LeaderboardEntry
+}
+
+"""A single user entry on a leaderboard."""
+type LeaderboardEntry {
+  rank: Int!
+  user: User!
+  workoutId: ID!
+  totalOutput: Float!
+  avgCadence: Float
+  avgResistance: Float
+  workoutStartedAt: DateTime!
+}
+
+"""Consecutive day or week workout streak."""
+type Streak {
+  userId: ID!
+  currentStreak: Int!
+  longestStreak: Int!
+  unit: String!
+  lastWorkoutAt: DateTime
+}
+
+"""An unlocked achievement or milestone."""
+type Achievement {
+  id: ID!
+  userId: ID!
+  name: String!
+  description: String
+  imageUrl: URL
+  earnedAt: DateTime!
+  category: String
+}
+
+"""A badge awarded for reaching a specific goal."""
+type Badge {
+  id: ID!
+  userId: ID!
+  name: String!
+  description: String
+  imageUrl: URL
+  awardedAt: DateTime!
+  badgeType: String!
+}
+
+"""Personal best record for a class type or metric."""
+type PBRecord {
+  id: ID!
+  userId: ID!
+  classType: ClassType!
+  metricName: String!
+  value: Float!
+  workoutId: ID!
+  achievedAt: DateTime!
+}
+
+# ─── Challenges ──────────────────────────────────────────────────────────────
+
+"""A community or brand-sponsored fitness challenge."""
+type Challenge {
+  id: ID!
+  title: String!
+  description: String
+  imageUrl: URL
+  startDate: DateTime!
+  endDate: DateTime!
+  goalValue: Float!
+  goalUnit: String!
+  classTypes: [ClassType!]
+  enrolledCount: Int!
+  isActive: Boolean!
+  leaderboard: Leaderboard
+  achievements: [ChallengeAchievement!]
+}
+
+"""An achievement unlocked within a challenge."""
+type ChallengeAchievement {
+  id: ID!
+  challengeId: ID!
+  userId: ID!
+  name: String!
+  description: String
+  imageUrl: URL
+  earnedAt: DateTime!
+  progressValue: Float!
+}
+
+# ─── Content & Media ─────────────────────────────────────────────────────────
+
+"""Music genre tag for a class."""
+type Genre {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+"""Music playlist used in a class."""
+type MusicPlaylist {
+  id: ID!
+  classId: ID
+  tracks: [MusicTrack!]
+  totalTracks: Int!
+  spotifyUrl: URL
+  appleMusicUrl: URL
+}
+
+"""A single music track in a playlist."""
+type MusicTrack {
+  id: ID!
+  title: String!
+  artist: String!
+  album: String
+  durationSeconds: Int
+  spotifyId: String
+  appleMusicId: String
+  imageUrl: URL
+}
+
+"""An image, video, or audio asset associated with content."""
+type MediaAsset {
+  id: ID!
+  url: URL!
+  assetType: String!
+  width: Int
+  height: Int
+  durationSeconds: Int
+  fileSizeBytes: Int
+  mimeType: String
+}
+
+"""Full text transcript of a class."""
+type Transcript {
+  classId: ID!
+  language: String!
+  captions: [Caption!]!
+}
+
+"""A timestamped caption line within a transcript."""
+type Caption {
+  id: ID!
+  startMs: Int!
+  endMs: Int!
+  text: String!
+  speakerName: String
+}
+
+# ─── Tags & Discovery ────────────────────────────────────────────────────────
+
+"""A tag used to organize or discover content."""
+type Tag {
+  id: ID!
+  name: String!
+  slug: String!
+  isSystem: Boolean!
+  usageCount: Int
+}
+
+# ─── Notifications & Scheduling ──────────────────────────────────────────────
+
+"""An in-app notification record."""
+type Notification {
+  id: ID!
+  userId: ID!
+  type: NotificationType!
+  title: String!
+  body: String
+  isRead: Boolean!
+  createdAt: DateTime!
+  relatedEntityId: ID
+  relatedEntityType: String
+}
+
+"""A class release or instructor schedule entry."""
+type Schedule {
+  id: ID!
+  instructor: Instructor
+  classType: ClassType
+  scheduledAt: DateTime!
+  title: String
+  description: String
+  isLive: Boolean!
+}
+
+# ─── Queries ─────────────────────────────────────────────────────────────────
+
+type Query {
+  """Fetch the currently authenticated user."""
+  me: User
+
+  """Fetch any user by ID."""
+  user(id: ID!): User
+
+  """Search users by username."""
+  searchUsers(query: String!, limit: Int): [User!]
+
+  """Fetch an instructor by ID."""
+  instructor(id: ID!): Instructor
+
+  """List all active instructors."""
+  instructors(classTypeId: ID, limit: Int, offset: Int): [Instructor!]
+
+  """Fetch a class by ID."""
+  class(id: ID!): Class
+
+  """List classes with optional filters."""
+  classes(
+    classTypeId: ID
+    instructorId: ID
+    difficulty: ClassDifficulty
+    duration: Int
+    genreId: ID
+    isLive: Boolean
+    limit: Int
+    offset: Int
+  ): [Class!]
+
+  """Fetch a live class by ID."""
+  liveClass(id: ID!): LiveClass
+
+  """List upcoming live classes."""
+  upcomingLiveClasses(classTypeId: ID, limit: Int): [LiveClass!]
+
+  """Fetch an on-demand class by ID."""
+  onDemandClass(id: ID!): OnDemandClass
+
+  """Fetch a workout by ID."""
+  workout(id: ID!): Workout
+
+  """List workouts for a user."""
+  workouts(userId: ID!, limit: Int, offset: Int): [Workout!]
+
+  """Fetch workout metrics for a workout."""
+  workoutMetrics(workoutId: ID!): WorkoutMetrics
+
+  """Fetch the leaderboard for a class."""
+  leaderboard(classId: ID!, limit: Int): Leaderboard
+
+  """Fetch all challenges, optionally filtered by active status."""
+  challenges(isActive: Boolean, limit: Int, offset: Int): [Challenge!]
+
+  """Fetch a challenge by ID."""
+  challenge(id: ID!): Challenge
+
+  """Fetch a program by ID."""
+  program(id: ID!): Program
+
+  """List programs with optional filters."""
+  programs(classTypeId: ID, difficulty: ClassDifficulty, limit: Int): [Program!]
+
+  """List all class types."""
+  classTypes: [ClassType!]
+
+  """Fetch notifications for the authenticated user."""
+  notifications(unreadOnly: Boolean, limit: Int, offset: Int): [Notification!]
+
+  """Fetch the class release schedule."""
+  schedule(startDate: DateTime, endDate: DateTime): [Schedule!]
+
+  """Fetch a follow summary between two users."""
+  followSummary(fromUserId: ID!, toUserId: ID!): FollowSummary
+}
+
+# ─── Mutations ───────────────────────────────────────────────────────────────
+
+type Mutation {
+  """Log in with email and password."""
+  login(email: String!, password: String!): AuthToken!
+
+  """Log out and invalidate the current session."""
+  logout: Boolean!
+
+  """Update the authenticated user's profile."""
+  updateProfile(displayName: String, location: String, bio: String): UserProfile!
+
+  """Follow a user."""
+  followUser(userId: ID!): FollowSummary!
+
+  """Unfollow a user."""
+  unfollowUser(userId: ID!): FollowSummary!
+
+  """Respond to a follow request."""
+  respondToFriendRequest(requestId: ID!, accept: Boolean!): FriendRequest!
+
+  """Bookmark a class."""
+  bookmarkClass(classId: ID!): Bookmark!
+
+  """Remove a bookmarked class."""
+  removeBookmark(bookmarkId: ID!): Boolean!
+
+  """Schedule a class on the user's calendar."""
+  scheduleClass(classId: ID!, scheduledFor: DateTime!): ScheduledClass!
+
+  """Remove a scheduled class."""
+  removeScheduledClass(scheduledClassId: ID!): Boolean!
+
+  """Enroll in a challenge."""
+  enrollInChallenge(challengeId: ID!): Challenge!
+
+  """Mark a notification as read."""
+  markNotificationRead(notificationId: ID!): Notification!
+
+  """Mark all notifications as read."""
+  markAllNotificationsRead: Boolean!
+
+  """Add a tag to the authenticated user's profile."""
+  addTag(name: String!): Tag!
+
+  """Remove a tag from the authenticated user's profile."""
+  removeTag(tagId: ID!): Boolean!
+}
+
+# ─── Subscriptions ───────────────────────────────────────────────────────────
+
+type Subscription {
+  """Subscribe to live class updates (participant count, chat)."""
+  liveClassUpdates(liveClassId: ID!): LiveClass!
+
+  """Subscribe to real-time leaderboard changes during a live class."""
+  leaderboardUpdates(classId: ID!): Leaderboard!
+
+  """Subscribe to new notifications for the authenticated user."""
+  newNotification: Notification!
+
+  """Subscribe to workout completion events from followed users."""
+  friendWorkoutCompleted: Workout!
+}
