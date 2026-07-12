@@ -45,6 +45,10 @@ apis:
       - url: graphql/peloton-graphql.md
         type: GraphQL
 common:
+  - type: VulnerabilityDisclosure
+    url: security/peloton-vulnerability-disclosure.yml
+  - type: DomainSecurity
+    url: security/peloton-domain-security.yml
   - type: LinkedIn
     url: https://www.linkedin.com/company/peloton
   - type: Website
