@@ -34,7 +34,7 @@ tags:
 url: https://raw.githubusercontent.com/api-evangelist/peloton/refs/heads/main/apis.yml
 created: '2026-05-05'
 modified: '2026-05-09'
-specificationVersion: '0.19'
+specificationVersion: '0.23'
 apis:
   - name: Peloton API
     description: >-
