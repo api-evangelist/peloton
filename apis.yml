@@ -64,8 +64,6 @@ apis:
       - Subscription
       - Streaming
     properties:
-      - url: graphql/peloton-graphql.md
-        type: GraphQL
 common:
   - type: VulnerabilityDisclosure
     url: security/peloton-vulnerability-disclosure.yml
