@@ -16,12 +16,22 @@ deployment:
 tools_count: 4
 tools:
 - name: search
-  description: ''
+  description: Search 60,000+ Peloton classes using natural language. Returns interactive carousel with
+    class cards.   Supports single queries ("30 min yoga with Emma") or multiple comma-separated queries
+    ("marathon, meditation, recovery yoga", max 3). Ad
 - name: fetch
-  description: ''
+  description: Get detailed view of a specific Peloton class by index. Shows hero image, instructor, description,
+    equipment, ratings, and link to Peloton.   Requires class index from search results. Use search first
+    if you don't have an index.
 - name: create-training-plan
-  description: ''
+  description: Create interactive weekly training plan (max 14 days) with drag-and-drop class cards and
+    rest days. Shows calendar with day labels, class details, and "Add to calendar" button.   MUST call
+    search first to get class indices. Use index from s
 - name: schedule
-  description: ''
+  description: 'Add classes to user''s Peloton calendar. Requires authentication. Shows confirmation widget
+    with link to https://members.onepeloton.com/yourschedule where users can view their scheduled classes.   Input:
+    Array of {index: class index from sea'
 tools_source: live tools/list via initialize handshake, 2026-09-12 (signals/audit_mcp_authorship.py --probe)
 authorship: provider
+descriptions_source: live tools/list (authorship probe or saved capture); filled by backfill-tools-from-authorship.py
+  --descriptions, 2026-09-28
