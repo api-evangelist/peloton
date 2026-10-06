@@ -44,7 +44,7 @@ tags:
   - Consumer
 url: https://raw.githubusercontent.com/api-evangelist/peloton/refs/heads/main/apis.yml
 created: '2026-05-05'
-modified: '2026-05-09'
+modified: '2026-10-06'
 specificationVersion: '0.23'
 apis:
   - name: Peloton API
@@ -65,6 +65,8 @@ apis:
       - Streaming
     properties:
 common:
+  - url: https://www.onepeloton.com/blog
+    type: Blog
   - type: VulnerabilityDisclosure
     url: security/peloton-vulnerability-disclosure.yml
   - type: DomainSecurity
