@@ -29,3 +29,32 @@
     - password
   status: not-a-workflow
   arazzo: null
+- slug: peloton-meltano
+  label: Meltano
+  partner: meltano
+  partner_name: Meltano
+  type: marketplace
+  marketplace: meltano-hub
+  channel: elt-connector
+  evidence: https://hub.meltano.com/extractors/tap-peloton--meltanolabs
+  source: edge
+  relationship: ipaas-bridge
+  contract_reference:
+    register: Meltano Hub (github.com/meltano/hub _data/meltano extractors + loaders)
+    spec_file: null
+    role: elt-connector:meltano-hub
+    registered_name: Peloton
+    matched_domain: onepeloton.com
+    matched_by: domain+name-among-holders
+    detected_by: sweep-data-integration.py
+    detected: '2026-10-18'
+    signal_note: one edge per (provider, platform); connectors, streams, packages and usage are context, never read
+    plugins:
+    - tap-peloton--meltanolabs
+    maintenance_status:
+    - active
+    quality:
+    - gold
+    builder: 'community (Meltano Hub variant maintainers: meltanolabs)'
+  status: pending-partner-spec
+  arazzo: null
