@@ -1,0 +1,265 @@
+{
+  "endpoint": "https://mcp.onepeloton.com/mcp",
+  "captured": "2026-10-20",
+  "method": "initialize + tools/list (anonymous, no tool called; roadmap#992)",
+  "protocol_version": "2024-11-05",
+  "server_info": {
+    "name": "peloton-mcp",
+    "version": "1.0.0",
+    "icons": [
+      {
+        "src": "https://mcp.onepeloton.com/peloton.jpg",
+        "mimeType": "image/jpeg",
+        "sizes": [
+          "any"
+        ]
+      }
+    ],
+    "websiteUrl": "https://mcp.onepeloton.com",
+    "oauth": {
+      "authorizationEndpoint": "https://mcp.onepeloton.com//api/oauth/authorize",
+      "tokenEndpoint": "https://mcp.onepeloton.com//api/oauth/token",
+      "scopes": [
+        "peloton-api.members:default"
+      ]
+    }
+  },
+  "result": {
+    "tools": [
+      {
+        "name": "search",
+        "title": "Peloton Class Search",
+        "description": "Search 60,000+ Peloton classes using natural language. Returns interactive carousel with class cards. \n\nSupports single queries (\"30 min yoga with Emma\") or multiple comma-separated queries (\"marathon, meditation, recovery yoga\", max 3). Advanced features: instructor matching (45+ instructors), music artist search (200+ artists like \"Green Day\", \"Beyoncé\"), difficulty filtering (beginner/intermediate/advanced or 1-10), duration matching (exact minutes), discipline filtering (cycling, strength, yoga, running, walking), year filtering (\"2025 running\", \"2024 yoga\"). Searches all disciplines when none specified. Only returns English-language classes. \n\nIMPORTANT - Seasonal/Holiday Queries: When users search for seasonal terms (fall, spring, summer, winter) or holidays (Halloween, Christmas, Thanksgiving, New Year, Valentine's Day), convert them to specific years in your query. Examples: \"fall cycling\" → \"2024 cycling\", \"halloween yoga\" → \"2024 yoga\", \"christmas rides\" → \"2024 cycling\". Use current year or previous year based on context. \n\nEach result includes an \"index\" field (0-60000) - use this index with fetch and create-training-plan tools. Never use slugs or construct index numbers. \n\nAfter search, recommend create-training-plan to organize classes into a weekly schedule.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Natural language search query. Single query (\"30 min yoga\") or comma-separated (max 3): \"cycling, yoga, strength\". Recognizes: instructors, genres, durations, class types, difficulty, year (e.g., \"2024 cycling\"). For seasonal/holiday terms (fall, halloween, christmas, etc.), convert to year-based queries (e.g., \"fall rides\" → \"2024 cycling\"). English classes only."
+            },
+            "limitPerQuery": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 15,
+              "default": 10,
+              "description": "Max results per query (default: 10, max: 15)"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ],
+        "_meta": {
+          "openai/outputTemplate": "ui://widget/search-dpl_7bx6.html",
+          "openai/widgetAccessible": true,
+          "openai/toolInvocation/invoking": "Searching Peloton classes...",
+          "openai/toolInvocation/invoked": "Search completed",
+          "securitySchemes": [
+            {
+              "type": "noauth"
+            }
+          ]
+        }
+      },
+      {
+        "name": "fetch",
+        "title": "Peloton Class Details",
+        "description": "Get detailed view of a specific Peloton class by index. Shows hero image, instructor, description, equipment, ratings, and link to Peloton. \n\nRequires class index from search results. Use search first if you don't have an index.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Class index from search results. Each class in the search results has an index, use this to fetch the details for that class."
+            },
+            "locale": {
+              "type": "string",
+              "description": "Locale (BCP 47 format)",
+              "default": "en-US"
+            }
+          },
+          "required": [
+            "index"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ],
+        "_meta": {
+          "openai/outputTemplate": "ui://widget/class-details-dpl_7bx6.html",
+          "openai/widgetAccessible": true,
+          "openai/toolInvocation/invoking": "Fetching class details...",
+          "openai/toolInvocation/invoked": "Class details retrieved",
+          "securitySchemes": [
+            {
+              "type": "noauth"
+            }
+          ]
+        }
+      },
+      {
+        "name": "create-training-plan",
+        "title": "Create Interactive Training Plan",
+        "description": "Create interactive weekly training plan (max 14 days) with drag-and-drop class cards and rest days. Shows calendar with day labels, class details, and \"Add to calendar\" button. \n\nMUST call search first to get class indices. Use index from search results for workout days. For rest days: set isRestDay=true, omit index. Each day needs ISO date (YYYY-MM-DD). \n\nInvalid indices become rest days. Never construct or guess index numbers.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Training plan title"
+            },
+            "locale": {
+              "type": "string",
+              "default": "en-US",
+              "description": "Locale for class details"
+            },
+            "plan": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Class index from search results. Omit for rest days."
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "ISO date (YYYY-MM-DD)"
+                  },
+                  "isRestDay": {
+                    "type": "boolean",
+                    "description": "True for rest days (no index needed)"
+                  },
+                  "locale": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "date"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "maxItems": 14,
+              "description": "Days in chronological order (max 14). Workout days need index from search. Rest days need isRestDay=true, no index."
+            }
+          },
+          "required": [
+            "plan"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "noauth"
+          }
+        ],
+        "_meta": {
+          "openai/outputTemplate": "ui://widget/training-plan-dpl_7bx6.html",
+          "openai/widgetAccessible": true,
+          "openai/toolInvocation/invoking": "Building your interactive training plan...",
+          "openai/toolInvocation/invoked": "Training plan ready! Drag to reorder.",
+          "securitySchemes": [
+            {
+              "type": "noauth"
+            }
+          ]
+        }
+      },
+      {
+        "name": "schedule",
+        "title": "Schedule Classes to Calendar",
+        "description": "Add classes to user's Peloton calendar. Requires authentication. Shows confirmation widget with link to https://members.onepeloton.com/yourschedule where users can view their scheduled classes. \n\nInput: Array of {index: class index from search, startTime: ISO 8601 datetime}. Processes multiple classes in parallel. Returns success/failure for each. \n\nUse create-training-plan first if user wants to visualize/plan before scheduling.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "classes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Class index from search results"
+                  },
+                  "startTime": {
+                    "type": "string",
+                    "description": "Start time (ISO 8601 format)"
+                  }
+                },
+                "required": [
+                  "index",
+                  "startTime"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "description": "Array of classes to schedule"
+            }
+          },
+          "required": [
+            "classes"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "readOnlyHint": false,
+          "openWorldHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "securitySchemes": [
+          {
+            "type": "oauth2",
+            "scopes": [
+              "peloton-api.members:default"
+            ]
+          }
+        ],
+        "_meta": {
+          "openai/outputTemplate": "ui://widget/schedule-dpl_7bx6.html",
+          "openai/widgetAccessible": true,
+          "openai/toolInvocation/invoking": "Adding classes to your Peloton schedule...",
+          "openai/toolInvocation/invoked": "Classes added to your Peloton schedule",
+          "securitySchemes": [
+            {
+              "type": "oauth2",
+              "scopes": [
+                "peloton-api.members:default"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
