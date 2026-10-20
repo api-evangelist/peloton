@@ -16,21 +16,36 @@ deployment:
 tools_count: 4
 tools:
 - name: search
-  description: Search 60,000+ Peloton classes using natural language. Returns interactive carousel with
-    class cards.   Supports single queries ("30 min yoga with Emma") or multiple comma-separated queries
-    ("marathon, meditation, recovery yoga", max 3). Ad
+  description: "Search 60,000+ Peloton classes using natural language. Returns interactive carousel with\
+    \ class cards. \n\nSupports single queries (\"30 min yoga with Emma\") or multiple comma-separated\
+    \ queries (\"marathon, meditation, recovery yoga\", max 3). Advanced features: instructor matching\
+    \ (45+ instructors), music artist search (200+ artists like \"Green Day\", \"Beyoncé\"), difficulty\
+    \ filtering (beginner/intermediate/advanced or 1-10), duration matching (exact minutes), discipline\
+    \ filtering (cycling, strength, yoga, running, walking), year filtering (\"2025 running\", \"2024\
+    \ yoga\"). Searches all disciplines when none specified. Only returns English-language classes. \n\
+    \nIMPORTANT - Seasonal/Holiday Queries: When users search for seasonal terms (fall, spring, summer,\
+    \ winter) or holidays (Halloween, Christmas, Thanksgiving, New Year, Valentine's Day), convert them\
+    \ to specific years in your query. Examples: \"fall cycling\" → \"2024 cycling\", \"halloween yoga\"\
+    \ → \"2024 yoga\", \"christmas rides\" → \"2024 cycling\". Use current year or previous year based\
+    \ on context. \n\nEach result includes an \"index\" field (0-60000) - use this index with fetch and\
+    \ create-training-plan tools. Never use slugs or construct index numbers. \n\nAfter search, recommend\
+    \ create-training-plan to organize classes into a weekly schedule."
 - name: fetch
-  description: Get detailed view of a specific Peloton class by index. Shows hero image, instructor, description,
-    equipment, ratings, and link to Peloton.   Requires class index from search results. Use search first
-    if you don't have an index.
+  description: "Get detailed view of a specific Peloton class by index. Shows hero image, instructor,\
+    \ description, equipment, ratings, and link to Peloton. \n\nRequires class index from search results.\
+    \ Use search first if you don't have an index."
 - name: create-training-plan
-  description: Create interactive weekly training plan (max 14 days) with drag-and-drop class cards and
-    rest days. Shows calendar with day labels, class details, and "Add to calendar" button.   MUST call
-    search first to get class indices. Use index from s
+  description: "Create interactive weekly training plan (max 14 days) with drag-and-drop class cards and\
+    \ rest days. Shows calendar with day labels, class details, and \"Add to calendar\" button. \n\nMUST\
+    \ call search first to get class indices. Use index from search results for workout days. For rest\
+    \ days: set isRestDay=true, omit index. Each day needs ISO date (YYYY-MM-DD). \n\nInvalid indices\
+    \ become rest days. Never construct or guess index numbers."
 - name: schedule
-  description: 'Add classes to user''s Peloton calendar. Requires authentication. Shows confirmation widget
-    with link to https://members.onepeloton.com/yourschedule where users can view their scheduled classes.   Input:
-    Array of {index: class index from sea'
+  description: "Add classes to user's Peloton calendar. Requires authentication. Shows confirmation widget\
+    \ with link to https://members.onepeloton.com/yourschedule where users can view their scheduled classes.\
+    \ \n\nInput: Array of {index: class index from search, startTime: ISO 8601 datetime}. Processes multiple\
+    \ classes in parallel. Returns success/failure for each. \n\nUse create-training-plan first if user\
+    \ wants to visualize/plan before scheduling."
 tools_source: live tools/list via initialize handshake, 2026-09-12 (signals/audit_mcp_authorship.py --probe)
 authorship: provider
 descriptions_source: live tools/list (authorship probe or saved capture); filled by backfill-tools-from-authorship.py
